@@ -99,6 +99,7 @@ exports.handle = function handle(client) {
 
         var resultLen = resultBody.response.venues.length
         var carouselArray = []
+        var i = 0
         for (i = 0; i < resultLen; i++) {
           var  carouselItemData = {
             'media_url': `http://cache.boston.com/bonzai-fba/Original_Photo/2011/11/23/pizza__1322067494_5957.jpg`,
