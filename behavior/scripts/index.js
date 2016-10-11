@@ -111,7 +111,7 @@ exports.handle = function handle(client) {
             'media_url': `http://cache.boston.com/bonzai-fba/Original_Photo/2011/11/23/pizza__1322067494_5957.jpg`,
             'media_type': 'image/jpeg', 
             'description': 'Pizza Place.',
-            title: resultBody.response.venues[i].name,
+            title: resultBody.response.venues[i].name.slice(0,78),
             actions: [
               {
                 type: 'link',
