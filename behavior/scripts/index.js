@@ -106,6 +106,7 @@ exports.handle = function handle(client) {
             'media_type': 'image/jpeg', 
             'description': 'Pizza Place.',
             title: resultBody.response.venues[i].name,
+            uri: resultBody.response.venues[i].url,
             actions: [
               {
                 type: 'link',
