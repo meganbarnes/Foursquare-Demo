@@ -90,7 +90,7 @@ exports.handle = function handle(client) {
     },
 
     prompt(callback) {
-      getVenues(resultBody => {
+      getVenues(client.getConversationState().query.value, client.getConversationState().near.value, resultBody => {
         if (!resultBody || resultBody.meta.code !== 200) {
           console.log('Error getting venues.')
           callback()
@@ -101,6 +101,12 @@ exports.handle = function handle(client) {
         var carouselArray = []
         var i = 0
         for (i = 0; i < resultLen; i++) {
+          var u = 'http://google.com'
+          if (resultBody.response.venues[i].url === undefined) {
+            u = 'http://bing.com'
+          } else {
+            u = resultBody.response.venues[i].url
+          }
           var  carouselItemData = {
             'media_url': `http://cache.boston.com/bonzai-fba/Original_Photo/2011/11/23/pizza__1322067494_5957.jpg`,
             'media_type': 'image/jpeg', 
@@ -110,18 +116,21 @@ exports.handle = function handle(client) {
               {
                 type: 'link',
                 text: 'Visit page',
-                uri: resultBody.response.venues[i].url,
+                uri: u,
               },
             ],
           }
-          if (carouselItemData.actions.uri === undefined) {
-            console.log("No website")
-          } else {
-            carouselArray.push(carouselItemData)
-          }
+          carouselArray.push(carouselItemData)
         }
 
         console.log('sending venues:', carouselArray)
+
+        const queryData = {
+          type: client.getConversationState().query.value,
+          place: client.getConversationState().near.value,
+        }
+
+        client.addResponse('app:response:name:provide/venues', queryData)
         client.addCarouselListResponse({ items: carouselArray })
         client.done()
 
@@ -135,7 +144,7 @@ exports.handle = function handle(client) {
     streams: {
       main: 'getVenues',
       hi: [sayHello],
-      getVenues: [provideVenues],
+      getVenues: [collectNear, collectQuery, provideVenues],
     }
   })
 }
