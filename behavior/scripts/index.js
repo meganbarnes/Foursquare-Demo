@@ -106,7 +106,6 @@ exports.handle = function handle(client) {
             'media_type': 'image/jpeg', 
             'description': 'Pizza Place.',
             title: resultBody.response.venues[i].name,
-            uri: resultBody.response.venues[i].url,
             actions: [
               {
                 type: 'link',
@@ -115,7 +114,11 @@ exports.handle = function handle(client) {
               },
             ],
           }
-          carouselArray.push(carouselItemData)
+          if resultBody.response.venues[i].url === undefined {
+            console.log("No website")
+          } else {
+            carouselArray.push(carouselItemData)
+          }
         }
 
         console.log('sending venues:', carouselArray)
