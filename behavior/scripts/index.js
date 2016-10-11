@@ -114,7 +114,7 @@ exports.handle = function handle(client) {
               },
             ],
           }
-          if carouselItemData.actions.uri === undefined {
+          if (carouselItemData.actions.uri === undefined) {
             console.log("No website")
           } else {
             carouselArray.push(carouselItemData)
