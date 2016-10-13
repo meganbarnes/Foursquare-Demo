@@ -19,11 +19,7 @@ exports.handle = function handle(client) {
     },
 
     prompt() {
-      client.addResponse('app:response:name:welcome')
-      client.addResponse('app:response:name:provide/documentation', {
-        documentation_link: 'http://docs.init.ai',
-      })
-      client.addResponse('app:response:name:provide/instructions')
+      client.addTextResponse('Welcome to Foursquare!  How can I help?')
       client.updateConversationState({
         helloSent: true
       })
@@ -140,11 +136,15 @@ exports.handle = function handle(client) {
   })
 
   client.runFlow({
-    classifications: {},
+    classifications: {
+      'greeting': 'hi',
+      'request/venues': 'getVenues',
+      'provide/near_place': 'getVenues',
+    },
     streams: {
       main: 'getVenues',
       hi: [sayHello],
-      getVenues: [collectNear, collectQuery, provideVenues],
+      getVenues: [collectQuery, collectNear, provideVenues],
     }
   })
 }
