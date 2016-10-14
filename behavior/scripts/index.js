@@ -145,10 +145,12 @@ exports.handle = function handle(client) {
                 } else {
                   u = resultBody.response.venues[i].url
                 }
+                var image_link = 'https://foursquare.com'+resultBody.response.venues[i].categories[0].icon.prefix.slice(20,resultBody.response.venues[i].categories[0].icon.prefix.length)+'bg_64'+resultBody.response.venues[i].categories[0].icon.suffix,
+                console.log(image_link)
                 var  carouselItemData = {
-                  'media_url': `http://cache.boston.com/bonzai-fba/Original_Photo/2011/11/23/pizza__1322067494_5957.jpg`,
-                  'media_type': 'image/jpeg', 
-                  'description': 'Pizza Place.',
+                  'media_url': image_link,
+                  'media_type': 'image/png', 
+                  'description': resultBody.response.venues[i].location.formattedAddress,
                   title: resultBody.response.venues[i].name.slice(0,78),
                   actions: [
                     {
