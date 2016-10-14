@@ -150,7 +150,7 @@ exports.handle = function handle(client) {
                 var  carouselItemData = {
                   'media_url': image_link,
                   'media_type': 'image/png', 
-                  'description': resultBody.response.venues[i].location.formattedAddress,
+                  'description': resultBody.response.venues[i].location.formattedAddress.join(", "),
                   title: resultBody.response.venues[i].name.slice(0,78),
                   actions: [
                     {
