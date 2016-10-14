@@ -70,6 +70,7 @@ exports.handle = function handle(client) {
         if (place) {
           client.updateConversationState({
             near: place,
+            confirmedPlace: null,
           })
           console.log('User wants venues near:', place.value)
         }
@@ -77,8 +78,44 @@ exports.handle = function handle(client) {
 
     prompt() {
       client.addResponse('app:response:name:prompt/near_place')
+      client.expect('getVenues', ['affirmative', 'decline', 'provide/near_place'])
       client.done()
     },
+  })
+
+
+  const confirmNear = client.createStep({
+    satisfied() {
+      return Boolean(client.getConversationState().confirmedNear)
+    },
+
+    prompt() {
+      let baseClassification = client.getMessagePart().classification.base_type.value
+      if (baseClassification === 'affirmative') {
+        client.updateConversationState({
+          confirmedNear: client.getConversationState().near,
+        })
+        return 'init.proceed'
+      } else if (baseClassification === 'decline') {
+        client.updateConversationState({
+          near: null, // Clear the requestedTicker so it's re-asked
+          confirmedNear: null,
+        })
+
+        client.addResponse('app:response:name:prompt/near_place')
+        client.done()
+      }
+
+      client.addResponse('app:response:name:confirm_place', {
+        place: client.getConversationState().near.value,
+      })
+
+      // If the next message is a 'decline', like 'don't know'
+      // An 'affirmative', like 'yeah', or 'that's right'
+      // or a ticker, the stream 'request_price' will be run
+      client.expect('getVenues', ['affirmative', 'decline', 'provide/near_place'])
+      client.done()
+    }
   })
 
   const collectQuery = client.createStep({
@@ -128,6 +165,7 @@ exports.handle = function handle(client) {
               convertedNear: true,
             })
             console.log('conv state:', client.getConversationState())
+
             getVenues(client.getConversationState().query.value, client.getConversationState().near.value, client.getConversationState().convertedNear, resultBody => {
               if (!resultBody || resultBody.meta.code !== 200) {
                 console.log('Error getting venues.')
@@ -139,12 +177,7 @@ exports.handle = function handle(client) {
               var carouselArray = []
               var i = 0
               for (i = 0; i < resultLen; i++) {
-                var u = 'http://google.com'
-                if (resultBody.response.venues[i].url === undefined) {
-                  u = 'http://bing.com'
-                } else {
-                  u = resultBody.response.venues[i].url
-                }
+                var u = resultBody.response.venues[i].url
                 var image_link = 'https://foursquare.com'+resultBody.response.venues[i].categories[0].icon.prefix.slice(20,resultBody.response.venues[i].categories[0].icon.prefix.length)+'bg_88'+resultBody.response.venues[i].categories[0].icon.suffix
                 console.log(image_link)
                 var  carouselItemData = {
@@ -252,7 +285,7 @@ exports.handle = function handle(client) {
     streams: {
       main: 'getVenues',
       hi: [sayHello],
-      getVenues: [collectQuery, collectNear, provideVenues],
+      getVenues: [collectQuery, collectNear, confirmNear, provideVenues],
       ask: [askForConfirmation],
       reset: [confirmReset, resetConvo]
     }
