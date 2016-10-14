@@ -147,7 +147,7 @@ exports.handle = function handle(client) {
                 }
                 var  carouselItemData = {
                   'media_url': 'https://foursquare.com'+resultBody.response.venues[i].categories[0].icon.prefix.slice(20,resultBody.response.venues[i].categories[0].icon.prefix.length)+'bg_64'+resultBody.response.venues[i].categories[0].icon.suffix,
-                  'media_type': 'image/jpeg', 
+                  'media_type': 'image/png', 
                   'description': resultBody.response.venues[i].location.formattedAddress,
                   title: resultBody.response.venues[i].name.slice(0,78),
                   actions: [
