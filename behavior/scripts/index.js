@@ -169,9 +169,12 @@ exports.handle = function handle(client) {
                 type: client.getConversationState().query.value,
                 place: client.getConversationState().near.raw_value,
               }
-
-              client.addResponse('app:response:name:provide/venues', queryData)
-              client.addCarouselListResponse({ items: carouselArray })
+              if (carouselArray.length > 0) {
+                client.addResponse('app:response:name:provide/venues', queryData)
+                client.addCarouselListResponse({ items: carouselArray })
+              } else {
+                client.addTextResponse(`We didn't find anything :/`)
+              }
               client.done()
 
               callback()
