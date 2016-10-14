@@ -145,7 +145,7 @@ exports.handle = function handle(client) {
                 } else {
                   u = resultBody.response.venues[i].url
                 }
-                var image_link = 'https://foursquare.com'+resultBody.response.venues[i].categories[0].icon.prefix.slice(20,resultBody.response.venues[i].categories[0].icon.prefix.length)+'bg_64'+resultBody.response.venues[i].categories[0].icon.suffix,
+                var image_link = 'https://foursquare.com'+resultBody.response.venues[i].categories[0].icon.prefix.slice(20,resultBody.response.venues[i].categories[0].icon.prefix.length)+'bg_64'+resultBody.response.venues[i].categories[0].icon.suffix
                 console.log(image_link)
                 var  carouselItemData = {
                   'media_url': image_link,
