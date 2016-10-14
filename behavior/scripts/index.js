@@ -1,7 +1,6 @@
 'use strict'
 
 const getVenues = require('./lib/getVenues')
-const getVenuesLatLon = require('./lib/getVenuesLatLon')
 const request = require('request')
 
 const firstOfEntityRole = function(message, entity, role) {
