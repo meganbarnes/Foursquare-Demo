@@ -136,7 +136,7 @@ exports.handle = function handle(client) {
             }
             for (var i = 0; i < resultLen; i++) {
               var  carouselItemData = {
-                'media_url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Flag_of_Taliban_(original).svg/2000px-Flag_of_Taliban_(original).svg.png',
+                'media_url': 'http://maps.google.com/maps/api/staticmap?zoom=12&size=400x400&maptype=road&markers='+resultBody.resourceSets[0].resources[i].point.coordinates[0].toString()+','+resultBody.resourceSets[0].resources[i].point.coordinates[1].toString()+'&sensor=false',
                 'media_type': 'image/png', 
                 'description': '',
                 title: resultBody.resourceSets[0].resources[i].name,
