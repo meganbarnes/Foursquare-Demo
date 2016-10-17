@@ -49,6 +49,20 @@ exports.handle = function handle(client) {
     }
   })
 
+  const provideCapabilities = client.createStep({
+    satisfied() {
+      return Boolean(client.getConversationState().capabilitiesSent)
+    },
+
+    prompt() {
+      client.addTextResponse('You can search for places and explore recommended or popular venues.')
+      client.updateConversationState({
+        capabilitiesSent: true
+      })
+      client.done()
+    }
+  })
+
   const untrained = client.createStep({
     satisfied() {
       return false
@@ -89,7 +103,7 @@ exports.handle = function handle(client) {
       return Boolean(client.getConversationState().confirmedNear)
     },
 
-    prompt() {
+    prompt(callback) {
       let baseClassification = client.getMessagePart().classification.base_type.value
       if (baseClassification === 'affirmative') {
         client.updateConversationState({
@@ -106,15 +120,61 @@ exports.handle = function handle(client) {
         client.done()
       }
 
-      client.addResponse('app:response:name:confirm_place', {
-        place: client.getConversationState().near.value,
-      })
+      if (client.getConversationState().near != null) {
+        getLatLong(client.getConversationState().near.value, (resultBody) => {
+          if (!resultBody || resultBody.statusCode !== 200) {
+            console.log('Error getting lat/lon.')
+            client.updateConversationState({
+              near: place,
+              convertedNear: false,
+            })
+          } else {
+            var carouselArray = []
+            var resultLen = 10
+            if (resultBody.resourceSets[0].resources.length < 10) {
+              resultLen = resultBody.resourceSets[0].resources.length
+            }
+            for (var i = 0; i < resultLen; i++) {
+              var  carouselItemData = {
+                'media_url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Flag_of_Taliban_(original).svg/2000px-Flag_of_Taliban_(original).svg.png',
+                'media_type': 'image/png', 
+                'description': '',
+                title: resultBody.resourceSets[0].resources[i].name,
+                actions: [
+                  {
+                    type: 'postback',
+                    text: 'Select location',
+                    payload: {
+                      data: {
+                        action: 'select',
+                        latlon: resultBody.resourceSets[0].resources[i].point.coordinates[0].toString()+','+resultBody.resourceSets[0].resources[i].point.coordinates[1].toString(),
+                      },
+                      version: '1',
+                      stream: 'getVenues',
+                    },
+                  },
+                ],
+              }
+              carouselArray.push(carouselItemData)
+            }
+            console.log(carouselArray)
+            if (carouselArray.length > 0) {
+              client.addTextResponse('Are you looking in one of these places?')
+              client.addCarouselListResponse({ items: carouselArray })
+              const postbackData = client.getPostbackData()
+              client.expect('getVenues', ['affirmative', 'provide/near_place'])
+              client.expect('reset', ['decline'])
+              client.done()
+              callback()
+            } 
+          }
+        })
+      }
 
       // If the next message is a 'decline', like 'don't know'
       // An 'affirmative', like 'yeah', or 'that's right'
       // or a ticker, the stream 'request_price' will be run
-      client.expect('getVenues', ['affirmative', 'decline', 'provide/near_place'])
-      client.done()
+      
     }
   })
 
@@ -176,8 +236,11 @@ exports.handle = function handle(client) {
               var resultLen = resultBody.response.venues.length
               var carouselArray = []
               var i = 0
+              var u = 'https://google.com'
               for (i = 0; i < resultLen; i++) {
-                var u = resultBody.response.venues[i].url
+                if (resultBody.response.venues[i].url) {
+                  u = resultBody.response.venues[i].url
+                }
                 var image_link = 'https://foursquare.com'+resultBody.response.venues[i].categories[0].icon.prefix.slice(20,resultBody.response.venues[i].categories[0].icon.prefix.length)+'bg_88'+resultBody.response.venues[i].categories[0].icon.suffix
                 console.log(image_link)
                 var  carouselItemData = {
@@ -219,12 +282,6 @@ exports.handle = function handle(client) {
       
     },
   })
-
-  
-
-  
-
-
 
   const askForConfirmation = client.createStep({
     satisfied() {
@@ -281,13 +338,15 @@ exports.handle = function handle(client) {
       'provide/near_place': 'getVenues',
       'goodbye': 'ask',
       'affirmative': 'reset',
+      'ask/capabilities': 'provideCapabilities',
     },
     streams: {
       main: 'getVenues',
       hi: [sayHello],
       getVenues: [collectQuery, collectNear, confirmNear, provideVenues],
       ask: [askForConfirmation],
-      reset: [confirmReset, resetConvo]
+      reset: [confirmReset, resetConvo],
+      provideCapabilities: []
     }
   })
 }
