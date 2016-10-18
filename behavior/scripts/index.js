@@ -79,7 +79,7 @@ exports.handle = function handle(client) {
       return Boolean(client.getConversationState().near)
     },
 
-    extractInfo(callback) {
+    extractInfo() {
       const place = firstOfEntityRole(client.getMessagePart(), 'place')
         if (place) {
           client.updateConversationState({
@@ -100,7 +100,24 @@ exports.handle = function handle(client) {
 
   const confirmNear = client.createStep({
     satisfied() {
-      return Boolean(client.getConversationState().confirmedNear)
+      return Boolean(client.getConversationState().convertedNear)
+    },
+
+    extractInfo() {
+      var postbackData = client.getPostbackData()
+      console.log("POstback data", postbackData)
+      if (postbackData != null) {
+        client.updateConversationState({
+          near: {
+            value: resultBody.resourceSets[0].resources[0].point.coordinates[0].toString()+','+resultBody.resourceSets[0].resources[0].point.coordinates[1].toString(),
+            raw_value: client.getConversationState().near.raw_value,
+            canonicalized: client.getConversationState().near.canonicalized,
+            parsed: client.getConversationState().near.parsed,
+          },
+          convertedNear: true,
+        })
+      }
+      console.log('conv state:', client.getConversationState())
     },
 
     prompt(callback) {
@@ -160,20 +177,8 @@ exports.handle = function handle(client) {
             if (carouselArray.length > 0) {
               client.addTextResponse('Are you looking in one of these places? Just checking.')
               client.addCarouselListResponse({ items: carouselArray })
-              var postbackData = client.getPostbackData()
-              console.log("POstback data", postbackData)
-              client.updateConversationState({
-                near: {
-                  value: resultBody.resourceSets[0].resources[0].point.coordinates[0].toString()+','+resultBody.resourceSets[0].resources[0].point.coordinates[1].toString(),
-                  raw_value: client.getConversationState().near.raw_value,
-                  canonicalized: client.getConversationState().near.canonicalized,
-                  parsed: client.getConversationState().near.parsed,
-                },
-                convertedNear: true,
-              })
-              console.log('conv state:', client.getConversationState())
-              client.expect('getVenues', ['affirmative', 'provide/near_place'])
-              client.expect('reset', ['decline'])
+              //client.expect('getVenues', ['affirmative', 'provide/near_place'])
+              //client.expect('reset', ['decline'])
               client.done()
               callback()
             } 
