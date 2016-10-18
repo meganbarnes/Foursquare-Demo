@@ -150,7 +150,7 @@ exports.handle = function handle(client) {
                         latlon: resultBody.resourceSets[0].resources[i].point.coordinates[0].toString()+','+resultBody.resourceSets[0].resources[i].point.coordinates[1].toString(),
                       },
                       version: '1',
-                      stream: 'getVenues',
+                      stream: 'provideVenues',
                     },
                   },
                 ],
@@ -357,7 +357,8 @@ exports.handle = function handle(client) {
       getVenues: [collectQuery, collectNear, confirmNear, provideVenues],
       ask: [askForConfirmation],
       reset: [confirmReset, resetConvo],
-      provideCapabilities: []
+      provideCapabilities: [],
+      provideVenues: [provideVenues],
     }
   })
 }
