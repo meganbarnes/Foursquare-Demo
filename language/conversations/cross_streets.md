@@ -12,5 +12,5 @@ can you help me find food near me?
 i'm looking for [korean food](type) near [42nd and Lexington](place)
 * request/venues
 
-Here are some places for [korean food](type) near [42nd and Lexington](place):
+< Here are some places for [korean food](type) near [42nd and Lexington](place):
 * provide/venues

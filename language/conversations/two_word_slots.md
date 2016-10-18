@@ -12,5 +12,5 @@ can you help?
 i want [frozen yogurt](type) in [park slope](place)
 * request/venues
 
-These are some places for [frozen yogurt](type) in [park slope](place):
+< These are some places for [frozen yogurt](type) in [park slope](place):
 * provide/venues

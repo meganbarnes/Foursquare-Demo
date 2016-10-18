@@ -80,6 +80,15 @@ exports.handle = function handle(client) {
     },
 
     extractInfo() {
+      let baseClassification = client.getMessagePart().classification.base_type.value
+      if (baseClassification === 'decline') {
+        client.updateConversationState({
+          near: null,
+          convertedNear: false,
+        })
+        return 'init.proceed' // `next` from this step will get called
+      }
+
       var postbackData = client.getPostbackData()
 
       if (postbackData != null) {
