@@ -159,9 +159,10 @@ exports.handle = function handle(client) {
             }
             console.log(carouselArray)
             if (carouselArray.length > 0) {
-              client.addTextResponse('Are you looking in one of these places?')
+              client.addTextResponse('Are you looking in one of these places? Just checking.')
               client.addCarouselListResponse({ items: carouselArray })
               const postbackData = client.getPostbackData()
+              console.log("POstback data", postbackData)
               client.expect('getVenues', ['affirmative', 'provide/near_place'])
               client.expect('reset', ['decline'])
               client.done()
@@ -206,6 +207,8 @@ exports.handle = function handle(client) {
     },
 
     prompt(callback) {
+      const postbackData = client.getPostbackData()
+      console.log("POstback data 2", postbackData)
       getLatLong(client.getConversationState().near.value, (resultBody) => {
           if (!resultBody || resultBody.statusCode !== 200) {
             console.log('Error getting lat/lon.')
