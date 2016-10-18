@@ -125,7 +125,6 @@ exports.handle = function handle(client) {
           if (!resultBody || resultBody.statusCode !== 200) {
             console.log('Error getting lat/lon.')
             client.updateConversationState({
-              near: place,
               convertedNear: false,
             })
           } else {
@@ -164,6 +163,22 @@ exports.handle = function handle(client) {
             } 
             var postbackData = client.getPostbackData()
             console.log("POstback data", postbackData)
+            if (postbackData != null) {
+              client.updateConversationState({
+                near: {
+                  value: resultBody.resourceSets[0].resources[0].point.coordinates[0].toString()+','+resultBody.resourceSets[0].resources[0].point.coordinates[1].toString(),
+                  raw_value: client.getConversationState().near.raw_value,
+                  canonicalized: client.getConversationState().near.canonicalized,
+                  parsed: client.getConversationState().near.parsed,
+                },
+                convertedNear: true,
+              })
+            } else {
+              client.updateConversationState({
+                convertedNear: false,
+              })
+            }
+            console.log('conv state:', client.getConversationState())
             client.expect('getVenues', ['affirmative', 'provide/near_place'])
             client.expect('reset', ['decline'])
             client.done()
@@ -207,90 +222,66 @@ exports.handle = function handle(client) {
     },
 
     prompt(callback) {
-      getLatLong(client.getConversationState().near.value, (resultBody) => {
-          if (!resultBody || resultBody.statusCode !== 200) {
-            console.log('Error getting lat/lon.')
-            client.updateConversationState({
-              near: place,
-              convertedNear: false,
-            })
-          } else {
-            console.log('Got em')
-            client.updateConversationState({
-              near: {
-                value: resultBody.resourceSets[0].resources[0].point.coordinates[0].toString()+','+resultBody.resourceSets[0].resources[0].point.coordinates[1].toString(),
-                raw_value: client.getConversationState().near.raw_value,
-                canonicalized: client.getConversationState().near.canonicalized,
-                parsed: client.getConversationState().near.parsed,
-              },
-              convertedNear: true,
-            })
-            console.log('conv state:', client.getConversationState())
+      getVenues(client.getConversationState().query.value, client.getConversationState().near.value, client.getConversationState().convertedNear, resultBody => {
+        if (!resultBody || resultBody.meta.code !== 200) {
+          console.log('Error getting venues.')
+          callback()
+          return
+        }
 
-            getVenues(client.getConversationState().query.value, client.getConversationState().near.value, client.getConversationState().convertedNear, resultBody => {
-              if (!resultBody || resultBody.meta.code !== 200) {
-                console.log('Error getting venues.')
-                callback()
-                return
-              }
-
-              var resultLen = resultBody.response.venues.length
-              var carouselArray = []
-              var i = 0
-              var u = 'https://google.com'
-              for (i = 0; i < resultLen; i++) {
-                if (resultBody.response.venues[i].url) {
-                  u = resultBody.response.venues[i].url
-                }
-                var image_link = 'https://foursquare.com'+resultBody.response.venues[i].categories[0].icon.prefix.slice(20,resultBody.response.venues[i].categories[0].icon.prefix.length)+'bg_88'+resultBody.response.venues[i].categories[0].icon.suffix
-                console.log(image_link)
-                var  carouselItemData = {
-                  'media_url': image_link,
-                  'media_type': 'image/png', 
-                  'description': resultBody.response.venues[i].location.formattedAddress.join(", "),
-                  title: resultBody.response.venues[i].name.slice(0,78),
-                  actions: [
-                    {
-                      type: 'link',
-                      text: 'Visit page',
-                      uri: u,
-                    },
-                    {
-                      type: 'postback',
-                      text: 'Similar venues',
-                      payload: {
-                        data: {
-                          action: 'similar',
-                          foursquare_id: resultBody.response.venues[i].id, 
-                        }
-                      }
-                    },
-                  ],
-                }
-                carouselArray.push(carouselItemData)
-              }
-
-              console.log('sending venues:', carouselArray)
-
-              const queryData = {
-                type: client.getConversationState().query.value,
-                place: client.getConversationState().near.raw_value,
-              }
-              if (carouselArray.length > 0) {
-                client.addResponse('app:response:name:provide/venues', queryData)
-                client.addCarouselListResponse({ items: carouselArray })
-              } else {
-                client.addTextResponse(`We didn't find anything :/`)
-              }
-              client.done()
-
-              callback()
-            })
+        var resultLen = resultBody.response.venues.length
+        var carouselArray = []
+        var i = 0
+        var u = 'https://google.com'
+        for (i = 0; i < resultLen; i++) {
+          if (resultBody.response.venues[i].url) {
+            u = resultBody.response.venues[i].url
           }
-        })
-        console.log('User wants venues near:', client.getConversationState().near)
+          var image_link = 'https://foursquare.com'+resultBody.response.venues[i].categories[0].icon.prefix.slice(20,resultBody.response.venues[i].categories[0].icon.prefix.length)+'bg_88'+resultBody.response.venues[i].categories[0].icon.suffix
+          console.log(image_link)
+          var  carouselItemData = {
+            'media_url': image_link,
+            'media_type': 'image/png', 
+            'description': resultBody.response.venues[i].location.formattedAddress.join(", "),
+            title: resultBody.response.venues[i].name.slice(0,78),
+            actions: [
+              {
+                type: 'link',
+                text: 'Visit page',
+                uri: u,
+              },
+              {
+                type: 'postback',
+                text: 'Similar venues',
+                payload: {
+                  data: {
+                    action: 'similar',
+                    foursquare_id: resultBody.response.venues[i].id, 
+                  }
+                }
+              },
+            ],
+          }
+          carouselArray.push(carouselItemData)
+        }
 
-      
+        console.log('sending venues:', carouselArray)
+
+        const queryData = {
+          type: client.getConversationState().query.value,
+          place: client.getConversationState().near.raw_value,
+        }
+        if (carouselArray.length > 0) {
+          client.addResponse('app:response:name:provide/venues', queryData)
+          client.addCarouselListResponse({ items: carouselArray })
+        } else {
+          client.addTextResponse(`We didn't find anything :/`)
+        }
+        client.done()
+
+        callback()
+      })
+      console.log('User wants venues near:', client.getConversationState().near)
     },
   })
 
