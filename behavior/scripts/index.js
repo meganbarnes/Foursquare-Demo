@@ -345,7 +345,7 @@ exports.handle = function handle(client) {
                   data: {
                     action: 'similar',
                     venue_id: resultBody.response.similarVenues.items[i].id,
-                    venue_name: resultBody.response.venues[i].name.slice(0,78),
+                    venue_name: resultBody.response.similarVenues.items[i].name.slice(0,78),
                   },
                   version: '1',
                   stream: 'similarVenues',
