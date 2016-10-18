@@ -293,7 +293,7 @@ exports.handle = function handle(client) {
 
   const provideSimilar = client.createStep({
     satisfied() {
-      return true
+      return false
     },
 
     
