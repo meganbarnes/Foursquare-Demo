@@ -221,6 +221,9 @@ exports.handle = function handle(client) {
       return false
     },
 
+    extractInfo() {
+    },
+
     prompt(callback) {
       getVenues(client.getConversationState().query.value, client.getConversationState().near.value, client.getConversationState().convertedNear, resultBody => {
         if (!resultBody || resultBody.meta.code !== 200) {
@@ -340,6 +343,7 @@ exports.handle = function handle(client) {
       return false
     },
 
+    
     extractInfo() {
       var postbackData = client.getPostbackData()
       console.log("POstback data", postbackData)
@@ -351,6 +355,7 @@ exports.handle = function handle(client) {
       }
       console.log('conv state:', client.getConversationState())
     },
+ 
 
     prompt(callback) {
       similarVenues(client.getConversationState().similarId, resultBody => {
@@ -431,7 +436,7 @@ exports.handle = function handle(client) {
       reset: [confirmReset, resetConvo],
       provideCapabilities: [],
       provideVenues: [provideVenues],
-      similarVenues: [similarVenues],
+      similarVenues: [provideSimilar],
     }
   })
 }
