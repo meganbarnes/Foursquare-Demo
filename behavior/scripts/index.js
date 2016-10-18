@@ -1,6 +1,7 @@
 'use strict'
 
 const getVenues = require('./lib/getVenues')
+const similarVenues = require('./lib/similarVenues')
 const request = require('request')
 
 const firstOfEntityRole = function(message, entity, role) {
@@ -352,7 +353,7 @@ exports.handle = function handle(client) {
     },
 
     prompt(callback) {
-      getVenues(client.getConversationState().similarId, resultBody => {
+      similarVenues(client.getConversationState().similarId, resultBody => {
         if (!resultBody || resultBody.meta.code !== 200) {
           console.log('Error getting similar venues.')
           callback()
