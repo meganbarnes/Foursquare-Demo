@@ -109,7 +109,7 @@ exports.handle = function handle(client) {
       if (postbackData != null) {
         client.updateConversationState({
           near: {
-            value: resultBody.resourceSets[0].resources[0].point.coordinates[0].toString()+','+resultBody.resourceSets[0].resources[0].point.coordinates[1].toString(),
+            value: postbackData.latlon,
             raw_value: client.getConversationState().near.raw_value,
             canonicalized: client.getConversationState().near.canonicalized,
             parsed: client.getConversationState().near.parsed,
