@@ -371,7 +371,7 @@ exports.handle = function handle(client) {
         var u = 'https://google.com'
         for (i = 0; i < resultLen; i++) {
           if (resultBody.response.similarVenues.items[i].url) {
-            u = resultBody.response.venues[i].url
+            u = resultBody.response.similarVenues.items[i].url
           }
           var image_link = 'https://foursquare.com'+resultBody.response.similarVenues.items[i].categories[0].icon.prefix.slice(20,resultBody.response.similarVenues.items[i].categories[0].icon.prefix.length)+'bg_88'+resultBody.response.similarVenues.items[i].categories[0].icon.suffix
           console.log(image_link)
