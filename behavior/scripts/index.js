@@ -42,7 +42,7 @@ exports.handle = function handle(client) {
     },
 
     prompt() {
-      client.addTextResponse('Welcome to Foursquare!  How can I help?')
+      client.addTextResponse('Welcome to Foursquare!  I can help you find places like restaurants and other venues and explore areas.  What are you looking for?')
       client.updateConversationState({
         helloSent: true
       })
@@ -50,30 +50,6 @@ exports.handle = function handle(client) {
     }
   })
 
-  const provideCapabilities = client.createStep({
-    satisfied() {
-      return Boolean(client.getConversationState().capabilitiesSent)
-    },
-
-    prompt() {
-      client.addTextResponse('You can search for places and explore recommended or popular venues.')
-      client.updateConversationState({
-        capabilitiesSent: true
-      })
-      client.done()
-    }
-  })
-
-  const untrained = client.createStep({
-    satisfied() {
-      return false
-    },
-
-    prompt() {
-      client.addResponse('app:response:name:apology/untrained')
-      client.done()
-    }
-  })
 
   const collectNear = client.createStep({
     satisfied() {
@@ -93,7 +69,6 @@ exports.handle = function handle(client) {
 
     prompt() {
       client.addResponse('app:response:name:prompt/near_place')
-      client.expect('getVenues', ['affirmative', 'decline', 'provide/near_place'])
       client.done()
     },
   })
@@ -106,7 +81,7 @@ exports.handle = function handle(client) {
 
     extractInfo() {
       var postbackData = client.getPostbackData()
-      console.log("POstback data", postbackData)
+
       if (postbackData != null) {
         client.updateConversationState({
           near: {
@@ -118,26 +93,9 @@ exports.handle = function handle(client) {
           convertedNear: true,
         })
       }
-      console.log('conv state:', client.getConversationState())
     },
 
     prompt(callback) {
-      let baseClassification = client.getMessagePart().classification.base_type.value
-      if (baseClassification === 'affirmative') {
-        client.updateConversationState({
-          confirmedNear: client.getConversationState().near,
-        })
-        return 'init.proceed'
-      } else if (baseClassification === 'decline') {
-        client.updateConversationState({
-          near: null, // Clear the requestedTicker so it's re-asked
-          confirmedNear: null,
-        })
-
-        client.addResponse('app:response:name:prompt/near_place')
-        client.done()
-      }
-
       if (client.getConversationState().near != null) {
         getLatLong(client.getConversationState().near.value, (resultBody) => {
           if (!resultBody || resultBody.statusCode !== 200) {
@@ -145,6 +103,7 @@ exports.handle = function handle(client) {
             client.updateConversationState({
               convertedNear: false,
             })
+            callback()
           } else {
             var carouselArray = []
             var resultLen = 10
@@ -174,23 +133,17 @@ exports.handle = function handle(client) {
               }
               carouselArray.push(carouselItemData)
             }
-            console.log(carouselArray)
             if (carouselArray.length > 0) {
               client.addTextResponse('Are you looking in one of these places? Just checking.')
               client.addCarouselListResponse({ items: carouselArray })
-              //client.expect('getVenues', ['affirmative', 'provide/near_place'])
-              //client.expect('reset', ['decline'])
-              client.done()
-              callback()
-            } 
+            } else {
+              client.addTextResponse(`We're having a hard time finding that location.  Could you clarify?`)
+            }
+            client.done()
+            callback()
           }
         })
       }
-
-      // If the next message is a 'decline', like 'don't know'
-      // An 'affirmative', like 'yeah', or 'that's right'
-      // or a ticker, the stream 'request_price' will be run
-      
     }
   })
 
@@ -260,6 +213,7 @@ exports.handle = function handle(client) {
                   data: {
                     action: 'similar',
                     venue_id: resultBody.response.venues[i].id,
+                    venue_name: resultBody.response.venues[i].name.slice(0,78),
                   },
                   version: '1',
                   stream: 'similarVenues',
@@ -283,7 +237,6 @@ exports.handle = function handle(client) {
           client.addTextResponse(`We didn't find anything :/`)
         }
         client.done()
-
         callback()
       })
       console.log('User wants venues near:', client.getConversationState().near)
@@ -292,7 +245,7 @@ exports.handle = function handle(client) {
 
   const askForConfirmation = client.createStep({
     satisfied() {
-      return Boolean(client.getConversationState().startOver)
+      return client.getConversationState().startOver
     },
 
     prompt() {
@@ -307,7 +260,7 @@ exports.handle = function handle(client) {
 
   const confirmReset = client.createStep({
     satisfied() {
-      return true
+      return client.getConversationState().gotYes
     },
 
     prompt() {
@@ -328,8 +281,8 @@ exports.handle = function handle(client) {
       if (client.getConversationState().startOver) {
         client.addTextResponse(`Let's try again.  How can I help?`)
         client.updateConversationState({
-          query: '',
-          near: '',
+          query: null,
+          near: null,
           startOver: false,
         })
         console.log('Resetting')
@@ -340,20 +293,19 @@ exports.handle = function handle(client) {
 
   const provideSimilar = client.createStep({
     satisfied() {
-      return false
+      return true
     },
 
     
     extractInfo() {
       var postbackData = client.getPostbackData()
-      console.log("POstback data", postbackData)
       if (postbackData != null) {
         client.updateConversationState({
           similarId: postbackData.venue_id,
+          similarName: postbackData.venue_name,
           wantSimilar: true,
         })
       }
-      console.log('conv state:', client.getConversationState())
     },
  
 
@@ -393,6 +345,7 @@ exports.handle = function handle(client) {
                   data: {
                     action: 'similar',
                     venue_id: resultBody.response.similarVenues.items[i].id,
+                    venue_name: resultBody.response.venues[i].name.slice(0,78),
                   },
                   version: '1',
                   stream: 'similarVenues',
@@ -406,7 +359,7 @@ exports.handle = function handle(client) {
         console.log('sending similar venues:', carouselArray)
 
         if (carouselArray.length > 0) {
-          client.addTextResponse('Here are some places similar to '+client.getConversationState().similarId)
+          client.addTextResponse('Here are some places similar to '+client.getConversationState().similarName+':')
           client.addCarouselListResponse({ items: carouselArray })
         } else {
           client.addTextResponse(`We didn't find anything :/`)
@@ -434,8 +387,6 @@ exports.handle = function handle(client) {
       getVenues: [collectQuery, collectNear, confirmNear, provideVenues],
       ask: [askForConfirmation],
       reset: [confirmReset, resetConvo],
-      provideCapabilities: [],
-      provideVenues: [provideVenues],
       similarVenues: [provideSimilar],
     }
   })
