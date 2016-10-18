@@ -84,7 +84,7 @@ exports.handle = function handle(client) {
         if (place) {
           client.updateConversationState({
             near: place,
-            confirmedPlace: null,
+            convertedNear: null,
           })
           console.log('User wants venues near:', place.value)
         }
