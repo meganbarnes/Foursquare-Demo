@@ -161,13 +161,13 @@ exports.handle = function handle(client) {
             if (carouselArray.length > 0) {
               client.addTextResponse('Are you looking in one of these places? Just checking.')
               client.addCarouselListResponse({ items: carouselArray })
-              const postbackData = client.getPostbackData()
-              console.log("POstback data", postbackData)
-              client.expect('getVenues', ['affirmative', 'provide/near_place'])
-              client.expect('reset', ['decline'])
-              client.done()
-              callback()
             } 
+            var postbackData = client.getPostbackData()
+            console.log("POstback data", postbackData)
+            client.expect('getVenues', ['affirmative', 'provide/near_place'])
+            client.expect('reset', ['decline'])
+            client.done()
+            callback()
           }
         })
       }
@@ -207,8 +207,6 @@ exports.handle = function handle(client) {
     },
 
     prompt(callback) {
-      const postbackData = client.getPostbackData()
-      console.log("POstback data 2", postbackData)
       getLatLong(client.getConversationState().near.value, (resultBody) => {
           if (!resultBody || resultBody.statusCode !== 200) {
             console.log('Error getting lat/lon.')
@@ -256,6 +254,16 @@ exports.handle = function handle(client) {
                       type: 'link',
                       text: 'Visit page',
                       uri: u,
+                    },
+                    {
+                      type: 'postback',
+                      text: 'Similar venues',
+                      payload: {
+                        data: {
+                          action: 'similar',
+                          foursquare_id: resultBody.response.venues[i].id, 
+                        }
+                      }
                     },
                   ],
                 }
