@@ -166,7 +166,7 @@ exports.handle = function handle(client) {
                         latlon: resultBody.resourceSets[0].resources[i].point.coordinates[0].toString()+','+resultBody.resourceSets[0].resources[i].point.coordinates[1].toString(),
                       },
                       version: '1',
-                      stream: 'provideVenues',
+                      stream: 'getVenues',
                     },
                   },
                 ],
@@ -249,6 +249,18 @@ exports.handle = function handle(client) {
                 text: 'Visit page',
                 uri: u,
               },
+              {
+                type: 'postback',
+                text: 'Similar venues',
+                payload: {
+                  data: {
+                    action: 'similar',
+                    venue_id: resultBody.response.venues[i].id,
+                  },
+                  version: '1',
+                  stream: 'similarVenues',
+                },
+              },
             ],
           }
           carouselArray.push(carouselItemData)
@@ -322,6 +334,85 @@ exports.handle = function handle(client) {
     },
   })
 
+  const provideSimilar = client.createStep({
+    satisfied() {
+      return false
+    },
+
+    extractInfo() {
+      var postbackData = client.getPostbackData()
+      console.log("POstback data", postbackData)
+      if (postbackData != null) {
+        client.updateConversationState({
+          similarId: postbackData.venue_id,
+          wantSimilar: true,
+        })
+      }
+      console.log('conv state:', client.getConversationState())
+    },
+
+    prompt(callback) {
+      getVenues(client.getConversationState().similarId, resultBody => {
+        if (!resultBody || resultBody.meta.code !== 200) {
+          console.log('Error getting similar venues.')
+          callback()
+          return
+        }
+
+        var resultLen = resultBody.response.similarVenues.count
+        var carouselArray = []
+        var i = 0
+        var u = 'https://google.com'
+        for (i = 0; i < resultLen; i++) {
+          if (resultBody.response.similarVenues.items[i].url) {
+            u = resultBody.response.venues[i].url
+          }
+          var image_link = 'https://foursquare.com'+resultBody.response.similarVenues.items[i].categories[0].icon.prefix.slice(20,resultBody.response.similarVenues.items[i].categories[0].icon.prefix.length)+'bg_88'+resultBody.response.similarVenues.items[i].categories[0].icon.suffix
+          console.log(image_link)
+          var  carouselItemData = {
+            'media_url': image_link,
+            'media_type': 'image/png', 
+            'description': resultBody.response.similarVenues.items[i].location.formattedAddress.join(", "),
+            title: resultBody.response.similarVenues.items[i].name.slice(0,78),
+            actions: [
+              {
+                type: 'link',
+                text: 'Visit page',
+                uri: u,
+              },
+              {
+                type: 'postback',
+                text: 'Similar venues',
+                payload: {
+                  data: {
+                    action: 'similar',
+                    venue_id: resultBody.response.similarVenues.items[i].id,
+                  },
+                  version: '1',
+                  stream: 'similarVenues',
+                },
+              },
+            ],
+          }
+          carouselArray.push(carouselItemData)
+        }
+
+        console.log('sending similar venues:', carouselArray)
+
+        if (carouselArray.length > 0) {
+          client.addTextResponse('Here are some places similar to '+client.getConversationState().similarId)
+          client.addCarouselListResponse({ items: carouselArray })
+        } else {
+          client.addTextResponse(`We didn't find anything :/`)
+        }
+        client.done()
+
+        callback()
+      })
+      console.log('User wants venues similar to:', client.getConversationState().similarId)
+    },
+  })
+
   client.runFlow({
     classifications: {
       'greeting': 'hi',
@@ -339,6 +430,7 @@ exports.handle = function handle(client) {
       reset: [confirmReset, resetConvo],
       provideCapabilities: [],
       provideVenues: [provideVenues],
+      similarVenues: [similarVenues],
     }
   })
 }
