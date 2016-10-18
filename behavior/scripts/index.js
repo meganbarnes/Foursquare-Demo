@@ -249,16 +249,6 @@ exports.handle = function handle(client) {
                 text: 'Visit page',
                 uri: u,
               },
-              {
-                type: 'postback',
-                text: 'Similar venues',
-                payload: {
-                  data: {
-                    action: 'similar',
-                    foursquare_id: resultBody.response.venues[i].id, 
-                  }
-                }
-              },
             ],
           }
           carouselArray.push(carouselItemData)
