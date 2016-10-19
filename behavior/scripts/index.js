@@ -152,7 +152,7 @@ exports.handle = function handle(client) {
             callback()
           }
         })
-      }
+      } 
     }
   })
 
@@ -254,7 +254,7 @@ exports.handle = function handle(client) {
 
   const askForConfirmation = client.createStep({
     satisfied() {
-      return client.getConversationState().startOver
+      return Boolean(client.getConversationState().startOver)
     },
 
     prompt() {
@@ -269,15 +269,24 @@ exports.handle = function handle(client) {
 
   const confirmReset = client.createStep({
     satisfied() {
-      return client.getConversationState().gotYes
+      return Boolean(!(client.getConversationState().gotYes == null))
     },
 
-    prompt() {
-      client.updateConversationState({
-        gotYes: true
-      })
-      console.log('They said yes')
-      client.done()
+    extractInfo() {
+      console.log("IN CONFRIMRESET")
+      let baseClassification = client.getMessagePart().classification.base_type.value
+      console.log(baseClassification)
+      if (baseClassification === 'affirmative') {
+        console.log('got a yes')
+        client.updateConversationState({
+          gotYes: true,
+        })
+      } else if (baseClassification === 'decline') {
+        console.log('got a no')
+        client.updateConversationState({
+          gotYes: false,
+        })
+      }
     },
   })
 
@@ -287,15 +296,19 @@ exports.handle = function handle(client) {
     },
 
     prompt() {
-      if (client.getConversationState().startOver) {
+      if (client.getConversationState().startOver && client.getConversationState().gotYes) {
         client.addTextResponse(`Let's try again.  How can I help?`)
-        client.updateConversationState({
-          query: null,
-          near: null,
-          startOver: false,
-        })
-        console.log('Resetting')
+      } else {
+        client.addTextResponse('Okay, bye!')
       }
+      client.updateConversationState({
+        query: null,
+        near: null,
+        startOver: null,
+        gotYes: null,
+        convertedNear: null,
+      })
+      console.log('Resetting')
       client.done()
     },
   })
@@ -386,7 +399,8 @@ exports.handle = function handle(client) {
       'greeting': 'hi',
       'request/venues': 'getVenues',
       'provide/near_place': 'getVenues',
-      'goodbye': 'ask',
+      'goodbye': 'reset',
+      'decline': 'reset',
       'affirmative': 'reset',
       'ask/capabilities': 'provideCapabilities',
     },
@@ -395,7 +409,7 @@ exports.handle = function handle(client) {
       hi: [sayHello],
       getVenues: [collectQuery, collectNear, confirmNear, provideVenues],
       ask: [askForConfirmation],
-      reset: [confirmReset, resetConvo],
+      reset: [askForConfirmation, confirmReset, resetConvo],
       similarVenues: [provideSimilar],
     }
   })
