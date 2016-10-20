@@ -30,4 +30,5 @@ timestamp: 2016-10-20T10:43:16.265797354-04:00
 i want to find [pie](type) in [red hook, Brooklyn, NY](place)
 * request/venues
 
-< [Pie](type) in [red hook, Brooklyn, NY](place)
+< [Pie](type) in [red hook, Brooklyn, NY](place):
+* provide/venues
