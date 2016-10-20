@@ -202,21 +202,21 @@ exports.handle = function handle(client) {
           return
         }
 
-        var resultLen = resultBody.response.venues.length
+        var resultLen = resultBody.response.groups[0].items.length
         var carouselArray = []
         var i = 0
         var u = 'https://google.com'
         for (i = 0; i < resultLen; i++) {
-          if (resultBody.response.venues[i].url) {
-            u = resultBody.response.venues[i].url
+          if (resultBody.response.groups[0].items[i].venue.url) {
+            u = resultBody.response.groups[0].items[i].venue.url
           }
-          var image_link = 'https://foursquare.com'+resultBody.response.venues[i].categories[0].icon.prefix.slice(20,resultBody.response.venues[i].categories[0].icon.prefix.length)+'bg_88'+resultBody.response.venues[i].categories[0].icon.suffix
+          var image_link = 'https://foursquare.com'+resultBody.response.groups[0].items[i].venue.categories[0].icon.prefix.slice(20,resultBody.response.groups[0].items[i].venue.categories[0].icon.prefix.length)+'bg_88'+resultBody.response.groups[0].items[i].venue.categories[0].icon.suffix
           console.log(image_link)
           var  carouselItemData = {
             'media_url': image_link,
             'media_type': 'image/png', 
-            'description': resultBody.response.venues[i].location.formattedAddress.join(", "),
-            title: resultBody.response.venues[i].name.slice(0,78),
+            'description': resultBody.response.groups[0].items[i].venue.location.formattedAddress.join(", "),
+            title: resultBody.response.groups[0].items[i].venue.name.slice(0,78),
             actions: [
               {
                 type: 'link',
@@ -229,8 +229,8 @@ exports.handle = function handle(client) {
                 payload: {
                   data: {
                     action: 'similar',
-                    venue_id: resultBody.response.venues[i].id,
-                    venue_name: resultBody.response.venues[i].name.slice(0,78),
+                    venue_id: resultBody.response.groups[0].items[i].venue.id,
+                    venue_name: resultBody.response.groups[0].items[i].venue.name.slice(0,78),
                   },
                   version: '1',
                   stream: 'similarVenues',
