@@ -7,9 +7,9 @@ module.exports = function getVenues(query, near, converted, next) {
   const clientSecret = `HX5M5PBDQJJ0V03CSHRWU2YEMVOZJLOR3NKMNQQPFSTI5LYS`
   const v = `20161010`
 
-  var requestUrl = `https://api.foursquare.com/v2/venues/search?client_id=${clientId}&client_secret=${clientSecret}&v=${v}&near=${near}&query=${query}&radius=1000&intent=browse&limit=10`
+  var requestUrl = `https://api.foursquare.com/v2/venues/explore?client_id=${clientId}&client_secret=${clientSecret}&v=${v}&near=${near}&query=${query}&radius=1000&intent=browse&limit=10`
   if (converted) {
-    requestUrl = `https://api.foursquare.com/v2/venues/search?client_id=${clientId}&client_secret=${clientSecret}&v=${v}&ll=${near}&query=${query}&radius=1000&intent=browse&limit=10`
+    requestUrl = `https://api.foursquare.com/v2/venues/explore?client_id=${clientId}&client_secret=${clientSecret}&v=${v}&ll=${near}&query=${query}&radius=1000&intent=browse&limit=10`
   }
 
   console.log('Making HTTP GET request to:', requestUrl)
