@@ -57,7 +57,10 @@ exports.handle = function handle(client) {
     },
 
     extractInfo() {
-      const place = firstOfEntityRole(client.getMessagePart(), 'place')
+      var postbackData = client.getPostbackData()
+
+      if (postbackData == null) {
+        const place = firstOfEntityRole(client.getMessagePart(), 'place')
         if (place) {
           client.updateConversationState({
             near: place,
@@ -65,7 +68,8 @@ exports.handle = function handle(client) {
           })
           console.log('User wants venues near:', place.value)
         }
-      },
+      }
+    },
 
     prompt() {
       client.addResponse('app:response:name:prompt/near_place')
@@ -162,12 +166,16 @@ exports.handle = function handle(client) {
     },
 
     extractInfo() {
-     const type = firstOfEntityRole(client.getMessagePart(), 'type')
-      if (type) {
-        client.updateConversationState({
-          query: type,
-        })
-        console.log('User wants:', type.value)
+      var postbackData = client.getPostbackData()
+
+      if (postbackData == null) {
+        const type = firstOfEntityRole(client.getMessagePart(), 'type')
+        if (type) {
+          client.updateConversationState({
+            query: type,
+          })
+          console.log('User wants:', type.value)
+        }
       }
     },
 
